@@ -2,7 +2,7 @@ import { hexToBytes } from "./bytes";
 import { chains } from "./chains";
 import { bitsHex, difficultyFromBits } from "./headers";
 import { formatDifficulty } from "./format";
-import type { BlockModel, ChainId, FeeRow, TokenModel, TxModel, TxSide } from "./types";
+import type { BlockModel, ChainId, FeeRow, TokenModel, TokenMove, TxModel, TxSide } from "./types";
 
 export function satsToCoins(sats: number, chain: ChainId): number {
   return sats / chains[chain].subunits;
@@ -59,6 +59,51 @@ function firstAddress(value: Json): string | undefined {
   return undefined;
 }
 
+// Nexa group authority flags: the top bits of an 8-byte quantity whose high bit (1 << 63) is set.
+const AUTHORITY_FLAGS: [bigint, string][] = [
+  [BigInt(1) << BigInt(62), "mint"],
+  [BigInt(1) << BigInt(61), "melt"],
+  [BigInt(1) << BigInt(60), "baton"],
+  [BigInt(1) << BigInt(59), "rescript"],
+  [BigInt(1) << BigInt(58), "subgroup"],
+];
+const AUTHORITY_BIT = BigInt(1) << BigInt(63);
+
+/** Exact group quantity from a Nexa grouped output script (push group id, then a 2, 4 or 8 byte LE quantity). */
+export function groupQuantityFromScript(hex: string): bigint | null {
+  let bytes: Uint8Array;
+  try {
+    bytes = hexToBytes(hex);
+  } catch {
+    return null;
+  }
+  let i = 0;
+  const op = bytes[i++];
+  let len: number;
+  if (op >= 1 && op <= 75) len = op;
+  else if (op === 0x4c) len = bytes[i++];
+  else if (op === 0x4d) {
+    len = bytes[i] | (bytes[i + 1] << 8);
+    i += 2;
+  } else return null;
+  if (len < 32) return null;
+  i += len;
+  const qlen = bytes[i++];
+  if (qlen !== 2 && qlen !== 4 && qlen !== 8) return null;
+  if (i + qlen > bytes.length) return null;
+  let q = BigInt(0);
+  for (let k = qlen - 1; k >= 0; k--) q = (q << BigInt(8)) | BigInt(bytes[i + k]);
+  return q;
+}
+
+function authorityFlags(raw: bigint): string[] {
+  return AUTHORITY_FLAGS.filter(([bit]) => (raw & bit) !== BigInt(0)).map(([, name]) => name);
+}
+
+function intText(n: number): string {
+  return Number.isInteger(n) ? BigInt(n).toString() : String(n);
+}
+
 function tokenOf(chain: ChainId, value: Json): TxSide["token"] | undefined {
   const tokenData = asObject(value.tokenData);
   if (tokenData && typeof tokenData.category === "string") {
@@ -77,7 +122,26 @@ function tokenOf(chain: ChainId, value: Json): TxSide["token"] | undefined {
   if (!id) return undefined;
   const quantity = script.groupQuantity ?? value.groupQuantity;
   if (quantity == null) return undefined;
-  return { id, amount: String(quantity), kind: chain === "nexa" ? "Nexa group token" : "Token" };
+  if (chain !== "nexa") return { id, amount: String(quantity), kind: "Token" };
+  // Rostrum reports an authority's 8-byte flags as a signed groupQuantity (e.g. -288230376151706200) and
+  // groupAuthority as a lossy float. Read the script when we have it; the flag bits survive either way.
+  const exact = typeof script.hex === "string" ? groupQuantityFromScript(script.hex) : null;
+  const authorityNum = script.groupAuthority ?? value.groupAuthority;
+  let raw: bigint | null = null;
+  if (exact != null) raw = (exact & AUTHORITY_BIT) !== BigInt(0) ? exact : null;
+  else if (typeof authorityNum === "number" && Number.isInteger(authorityNum) && authorityNum > 0) raw = BigInt(authorityNum);
+  else if (typeof quantity === "number" && Number.isInteger(quantity) && quantity < 0) raw = BigInt(quantity) + (BigInt(1) << BigInt(64));
+  if (raw != null) return { id, amount: "0", kind: "Nexa token authority", authority: authorityFlags(raw) };
+  const amount = exact != null ? exact.toString() : typeof quantity === "number" ? intText(quantity) : String(quantity);
+  return { id, amount, kind: "Nexa group token" };
+}
+
+/** The token a tx headline shows. Authorities only when nothing else moves. */
+export function txTokens(tx: Pick<TxModel, "inputs" | "outputs">): { token?: TokenMove; authority?: TokenMove } {
+  const sides = [...tx.outputs, ...tx.inputs];
+  const token = sides.find((side) => side.token && !side.token.authority)?.token;
+  if (token) return { token };
+  return { authority: sides.find((side) => side.token?.authority)?.token };
 }
 
 function outpointLabel(value: Json): string {
@@ -281,8 +345,17 @@ export function mapHistory(raw: unknown, limit: number): { entries: { txid: stri
 
 export function mapTokenBalances(raw: unknown): { id: string; amount: string }[] {
   const row = asObject(raw);
-  const list = Array.isArray(raw) ? raw : Array.isArray(row?.confirmed) ? row.confirmed : Array.isArray(row?.balances) ? row.balances : [];
   const out: { id: string; amount: string }[] = [];
+  // Rostrum: { confirmed: { <token_id_hex>: amount } }. Authorities count as 0 and are skipped.
+  const map = asObject(row?.confirmed);
+  if (map) {
+    for (const [id, amount] of Object.entries(map)) {
+      const text = typeof amount === "number" ? intText(amount) : String(amount ?? "0");
+      if (/^\d+$/.test(text) && text !== "0") out.push({ id, amount: text });
+    }
+    return out;
+  }
+  const list = Array.isArray(raw) ? raw : Array.isArray(row?.confirmed) ? row.confirmed : Array.isArray(row?.balances) ? row.balances : [];
   for (const item of list) {
     const token = asObject(item);
     if (!token) continue;

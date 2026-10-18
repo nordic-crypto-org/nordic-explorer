@@ -1,0 +1,103 @@
+{
+ "blockhash": "2bf13848a0b51644d11c7be401169390d0cf8d2587051aa10480e0ba5a8e5e81",
+ "blocktime": 1792232757,
+ "confirmations": 555,
+ "fee": 7.56,
+ "fee_satoshi": 756,
+ "hash": "a380510202fd3d68c9787373f38129b7d625e0e4e88cc95bbb38f34ae1acbf8b",
+ "height": 1171525,
+ "hex": "00010063218f9d809d95e1663915d26e0ae5eb23cc49f0d6eca53587f90193c50a6bdd64222103a841370a113b6ba195055d94aea5c989612d85cff0418a78fb195c6386fed6d1406651bf39a57779805b8a09df88e944411585907c24faf679410ff37bf6fbbb88aa690906b42cb22727685530edb2dfa3352dae8e57cab32bc7e15d692a100eecffffffff10a4000000000000030000000000000000006c6a0438564c05064e4353484c44144e6f726469632043727970746f20536869656c642768747470733a2f2f6e66742e6e6f7264696363727970746f2e6e6f2f6e6373686c642e6a736f6e208f84b0460805a775f4a71c46cf2a576d2feb70ae1cc4f779802ec220f47e543400012202000000000000402069bb784cf1c07d48c737cd082f6bd145ab5d7d70edfc346af71aef29575400000893150000000000fc511481bd2b481fadb2637b7a1fd23f82c518027ba4c301fa9e0000000000001700511481bd2b481fadb2637b7a1fd23f82c518027ba4c300000000",
+ "locktime": 0,
+ "size": 378,
+ "time": 1792232757,
+ "txid": "a380510202fd3d68c9787373f38129b7d625e0e4e88cc95bbb38f34ae1acbf8b",
+ "txidem": "78eeb2a52e6440a774e39f8b8e022f3dde9f83f69654d1968a372ee6a379d679",
+ "version": 0,
+ "vin": [
+  {
+   "addresses": [
+    "nexa:nqtsq5g5sx7jkjql4kexx7m6rlfrlqk9rqp8hfxrcl75lfsl"
+   ],
+   "coinbase": null,
+   "group": null,
+   "groupAuthority": 0,
+   "groupQuantity": null,
+   "outpoint": "dd6b0ac59301f98735a5ecd6f049cc23ebe50a6ed2153966e1959d809d8f2163",
+   "scriptSig": {
+    "asm": "OP_PUSHBYTES_34 2103a841370a113b6ba195055d94aea5c989612d85cff0418a78fb195c6386fed6d1 OP_PUSHBYTES_64 6651bf39a57779805b8a09df88e944411585907c24faf679410ff37bf6fbbb88aa690906b42cb22727685530edb2dfa3352dae8e57cab32bc7e15d692a100eec",
+    "hex": "222103a841370a113b6ba195055d94aea5c989612d85cff0418a78fb195c6386fed6d1406651bf39a57779805b8a09df88e944411585907c24faf679410ff37bf6fbbb88aa690906b42cb22727685530edb2dfa3352dae8e57cab32bc7e15d692a100eec"
+   },
+   "sequence": 4294967295,
+   "token_id_hex": null,
+   "value": 420,
+   "value_coin": 420,
+   "value_satoshi": 42000
+  }
+ ],
+ "vout": [
+  {
+   "n": 0,
+   "outpoint_hash": "385b4886aba1658f6a844539d9a44af030d3f30eade65e178eb9f788508de787",
+   "scriptPubKey": {
+    "addresses": [],
+    "argsHash": null,
+    "asm": "OP_RETURN OP_PUSHBYTES_4 38564c05 OP_PUSHBYTES_6 4e4353484c44 OP_PUSHBYTES_20 4e6f726469632043727970746f20536869656c64 OP_PUSHBYTES_39 68747470733a2f2f6e66742e6e6f7264696363727970746f2e6e6f2f6e6373686c642e6a736f6e OP_PUSHBYTES_32 8f84b0460805a775f4a71c46cf2a576d2feb70ae1cc4f779802ec220f47e5434 OP_0",
+    "group": null,
+    "groupAuthority": null,
+    "groupQuantity": null,
+    "hex": "6a0438564c05064e4353484c44144e6f726469632043727970746f20536869656c642768747470733a2f2f6e66742e6e6f7264696363727970746f2e6e6f2f6e6373686c642e6a736f6e208f84b0460805a775f4a71c46cf2a576d2feb70ae1cc4f779802ec220f47e543400",
+    "scriptHash": null,
+    "token_id_hex": null,
+    "type": "nulldata"
+   },
+   "type": 0,
+   "value": 0,
+   "value_coin": 0,
+   "value_satoshi": 0
+  },
+  {
+   "n": 1,
+   "outpoint_hash": "a0ebf6e16c100070d42c4acaff09a66656485596f65403149054df09cf37f397",
+   "scriptPubKey": {
+    "addresses": [
+     "nexa:nqtsq5g5sx7jkjql4kexx7m6rlfrlqk9rqp8hfxrcl75lfsl"
+    ],
+    "argsHash": "81bd2b481fadb2637b7a1fd23f82c518027ba4c3",
+    "asm": "OP_PUSHBYTES_32 69bb784cf1c07d48c737cd082f6bd145ab5d7d70edfc346af71aef2957540000 OP_PUSHBYTES_8 93150000000000fc OP_PUSHNUM_1 OP_PUSHBYTES_20 81bd2b481fadb2637b7a1fd23f82c518027ba4c3",
+    "group": "nexa:tp5mk7zv78q86jx8xlxsstmt69z6khtawrklcdr27udw722h2sqqqshrajlfj",
+    "groupAuthority": 18158513697557846000,
+    "groupQuantity": -288230376151706200,
+    "hex": "2069bb784cf1c07d48c737cd082f6bd145ab5d7d70edfc346af71aef29575400000893150000000000fc511481bd2b481fadb2637b7a1fd23f82c518027ba4c3",
+    "scriptHash": "pay2pubkeytemplate",
+    "token_id_hex": "69bb784cf1c07d48c737cd082f6bd145ab5d7d70edfc346af71aef2957540000",
+    "type": "scripttemplate"
+   },
+   "type": 1,
+   "value": 5.46,
+   "value_coin": 5.46,
+   "value_satoshi": 546
+  },
+  {
+   "n": 2,
+   "outpoint_hash": "f42ad729e15b6539fe62a611f989efcd578c546cf66d10ce2de2d79364ec087f",
+   "scriptPubKey": {
+    "addresses": [
+     "nexa:nqtsq5g5sx7jkjql4kexx7m6rlfrlqk9rqp8hfxrcl75lfsl"
+    ],
+    "argsHash": "81bd2b481fadb2637b7a1fd23f82c518027ba4c3",
+    "asm": "OP_0 OP_PUSHNUM_1 OP_PUSHBYTES_20 81bd2b481fadb2637b7a1fd23f82c518027ba4c3",
+    "group": null,
+    "groupAuthority": 0,
+    "groupQuantity": null,
+    "hex": "00511481bd2b481fadb2637b7a1fd23f82c518027ba4c3",
+    "scriptHash": "pay2pubkeytemplate",
+    "token_id_hex": null,
+    "type": "scripttemplate"
+   },
+   "type": 1,
+   "value": 406.98,
+   "value_coin": 406.98,
+   "value_satoshi": 40698
+  }
+ ]
+}

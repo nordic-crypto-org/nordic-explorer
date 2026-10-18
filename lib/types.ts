@@ -38,6 +38,8 @@ export type TokenMove = {
   id: string;
   amount: string;
   kind: string;
+  /** Nexa authority flags (mint, melt, …). Set when the output is an authority, not a token amount. */
+  authority?: string[];
 };
 
 export type TxSide = {

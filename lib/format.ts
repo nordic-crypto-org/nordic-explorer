@@ -145,6 +145,10 @@ export function formatSatPerByte(satPerByte: number, unit: "byte" | "vB" = "byte
   return `${body} sat/${unit}`;
 }
 
+export function authorityText(flags: string[]) {
+  return flags.length ? `Authority (${flags.join(", ")})` : "Authority";
+}
+
 export function formatRawAmount(amount: string) {
   if (!/^\d+$/.test(amount)) return amount;
   try {

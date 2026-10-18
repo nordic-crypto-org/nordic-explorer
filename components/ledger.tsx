@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { chains } from "@/lib/chains";
-import { formatBytes, formatCoin, formatNumber, formatRawAmount, formatWhen, shortId } from "@/lib/format";
+import { authorityText, formatBytes, formatCoin, formatNumber, formatRawAmount, formatWhen, shortId } from "@/lib/format";
+import { txTokens } from "@/lib/protocol";
 import { addressHref, blockHref, tokenHref, txHref } from "@/lib/routes";
 import type { AddressModel, BlockModel, ChainId, TxModel, TxSide } from "@/lib/types";
 import { Age } from "./age";
@@ -26,7 +27,7 @@ function TokenBit({ chainId, side }: { chainId: ChainId; side: TxSide }) {
   if (!side.token) return null;
   return (
     <Link className="tokenline" href={tokenHref(chainId, side.token.id)}>
-      {formatRawAmount(side.token.amount)} {shortId(side.token.id, 8, 4)}
+      {side.token.authority ? authorityText(side.token.authority) : formatRawAmount(side.token.amount)} {shortId(side.token.id, 8, 4)}
     </Link>
   );
 }
@@ -162,7 +163,7 @@ function SideList({ chainId, title, sides, coinbase }: { chainId: ChainId; title
 
 export function TxView({ tx }: { tx: TxModel }) {
   const chain = chains[tx.chain];
-  const token = [...tx.outputs, ...tx.inputs].find((side) => side.token)?.token;
+  const { token, authority } = txTokens(tx);
   const outputTotal = tx.outputs.reduce((sum, side) => sum + (side.amount ?? 0), 0);
   return (
     <>
@@ -208,6 +209,15 @@ export function TxView({ tx }: { tx: TxModel }) {
           </strong>
           <p>
             {formatRawAmount(token.amount)} of token {shortId(token.id, 12, 6)} moves in this transaction.
+          </p>
+        </div>
+      ) : authority ? (
+        <div className="callout">
+          <strong>
+            <Link href={tokenHref(tx.chain, authority.id)}>{authority.kind}</Link>
+          </strong>
+          <p>
+            {authorityText(authority.authority ?? [])} for token {shortId(authority.id, 12, 6)} moves in this transaction.
           </p>
         </div>
       ) : null}

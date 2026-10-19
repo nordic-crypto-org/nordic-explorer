@@ -1,0 +1,20 @@
+{
+ "tokenInfo": {
+  "id": 1589123,
+  "token": "nexa:tp5mk7zv78q86jx8xlxsstmt69z6khtawrklcdr27udw722h2sqqqshrajlfj",
+  "tokenIdHex": "69bb784cf1c07d48c737cd082f6bd145ab5d7d70edfc346af71aef2957540000",
+  "name": "Nordic Crypto Shield",
+  "ticker": "NCSHLD",
+  "documentUrl": "https://nft.nordiccrypto.no/ncshld.json",
+  "documentHash": "8f84b0460805a775f4a71c46cf2a576d2feb70ae1cc4f779802ec220f47e5434",
+  "decimals": null,
+  "parentGroup": null,
+  "genesisTxId": "a380510202fd3d68c9787373f38129b7d625e0e4e88cc95bbb38f34ae1acbf8b",
+  "genesisTxIdem": "78eeb2a52e6440a774e39f8b8e022f3dde9f83f69654d1968a372ee6a379d679",
+  "genesisAddress": "nexa:nqtsq5g5sx7jkjql4kexx7m6rlfrlqk9rqp8hfxrcl75lfsl",
+  "blockHash": "2bf13848a0b51644d11c7be401169390d0cf8d2587051aa10480e0ba5a8e5e81",
+  "blockHeight": 1171525
+ },
+ "iconUrl": "https://nft.nordiccrypto.no/ncshld.png",
+ "jsonDoc": "[{\"ticker\":\"NCSHLD\",\"name\":\"Nordic Crypto Shield\",\"summary\":\"Collectible badge from Nordic Crypto. Edition of 1,000. No economic rights.\",\"description\":\"A free collectible badge from Nordic Crypto (nordiccrypto.no). Holders pay only the Nexa network fee. The badge carries no rights, rewards or claims of any kind.\",\"legal\":\"https://nft.nordiccrypto.no/terms\",\"creator\":\"Nordic Crypto\",\"category\":\"collectible\",\"icon\":\"https://nft.nordiccrypto.no/ncshld.png\",\"contact\":{\"web\":\"https://nordiccrypto.no\"}},\"IPRfhIhmr22kcsACGdsEEeJoi5+GYrCoKnCCrg3MphHkfhnL0KGNVRO5BfnTMKtEF6vHtFeku/ncPVa8WTZ2GSA=\"]"
+}

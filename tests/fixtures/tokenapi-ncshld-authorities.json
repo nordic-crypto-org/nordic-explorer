@@ -1,0 +1,26 @@
+[
+ {
+  "utxo": {
+   "outpoint": "f47414e483759278cf5d0dbed3f44fb7c96306497bda6fa3c9744e83147e52fd",
+   "type": 1,
+   "txId": "16660231ee067c8108c0c4472b12a816ec734bab3179435e9249a350495794fa",
+   "txIdem": "ec45da427fd985a068d8b2556ac8dc9aeb62b88460a7c5d256df02a7b0984703",
+   "rawValue": "546",
+   "hex": "2069bb784cf1c07d48c737cd082f6bd145ab5d7d70edfc346af71aef29575400000893150000000000fc511481bd2b481fadb2637b7a1fd23f82c518027ba4c3",
+   "token": "nexa:tp5mk7zv78q86jx8xlxsstmt69z6khtawrklcdr27udw722h2sqqqshrajlfj",
+   "tokenIdHex": "69bb784cf1c07d48c737cd082f6bd145ab5d7d70edfc346af71aef2957540000",
+   "quantity": "-288230376151706221",
+   "address": "nexa:nqtsq5g5sx7jkjql4kexx7m6rlfrlqk9rqp8hfxrcl75lfsl",
+   "isSpent": false,
+   "vindex": 0
+  },
+  "flags": [
+   "AUTHORITY",
+   "MINT",
+   "MELT",
+   "BATON",
+   "RESCRIPT",
+   "SUBGROUP"
+  ]
+ }
+]

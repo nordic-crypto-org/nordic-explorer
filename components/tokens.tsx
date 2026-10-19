@@ -7,9 +7,10 @@ import { loadSubgroups } from "@/lib/load";
 import { fetchTokenDoc, safeHttpUrl, type TokenDoc } from "@/lib/token-doc";
 import { useRouter } from "next/navigation";
 import { chains } from "@/lib/chains";
-import { formatNumber, shortId } from "@/lib/format";
+import { authorityText, formatNumber, formatTokenUnits, shortId } from "@/lib/format";
 import { knownTokenIcon } from "@/lib/known-tokens";
-import { blockHref, tokenHref, txHref } from "@/lib/routes";
+import { addressHref, blockHref, tokenHref, txHref } from "@/lib/routes";
+import { apiAuthorities, apiRichList, apiSubgroups, apiTokenStats, apiTokenTxs, TOKEN_API_DOCS, type ApiAuthority, type ApiTokenStats, type ApiTokenTx } from "@/lib/token-api";
 import type { ChainId, SubgroupRow, TokenModel } from "@/lib/types";
 
 export function TokenLookup({ chainId }: { chainId: ChainId }) {
@@ -116,13 +117,13 @@ export function TokenView({ token }: { token: TokenModel }) {
   const [doc, setDoc] = useState<TokenDoc | null | "failed">(null);
   useEffect(() => {
     let live = true;
-    fetchTokenDoc(token.documentUrl, token.documentHash)
+    fetchTokenDoc(token.documentUrl, token.documentHash, token.doc)
       .then((d) => live && setDoc(d))
       .catch(() => live && setDoc("failed"));
     return () => {
       live = false;
     };
-  }, [token.documentUrl, token.documentHash]);
+  }, [token.documentUrl, token.documentHash, token.doc]);
   const docIcon = doc && doc !== "failed" ? safeHttpUrl(doc.meta?.icon, doc.url) : null;
   const icon = token.icon ?? docIcon;
   return (
@@ -164,6 +165,14 @@ export function TokenView({ token }: { token: TokenModel }) {
           <dt>Decimals</dt>
           <dd>{token.decimals == null ? "Not reported" : formatNumber(token.decimals)}</dd>
         </div>
+        {token.parent ? (
+          <div>
+            <dt>Subgroup of</dt>
+            <dd>
+              <Link href={tokenHref(token.chain, token.parent)}>{shortId(token.parent, 12, 6)}</Link>
+            </dd>
+          </div>
+        ) : null}
         <div>
           <dt>Genesis</dt>
           <dd>
@@ -177,12 +186,181 @@ export function TokenView({ token }: { token: TokenModel }) {
           </dd>
         </div>
       </dl>
+      {token.chain === "nexa" ? <ApiFacts token={token} /> : null}
       {token.documentUrl ? <TokenDocument url={token.documentUrl} doc={doc} /> : null}
-      {token.chain === "nexa" ? <Subgroups chainId={token.chain} group={token.group} /> : null}
+      {token.chain === "nexa" ? (
+        <>
+          <Holders token={token} />
+          <TokenTxs token={token} />
+          <Authorities token={token} />
+          <Subgroups chainId={token.chain} group={token.group} />
+          <p className="muted">
+            {token.source === "token-api" ? "Token details from the " : "Genesis record from our Rostrum server; the "}
+            <a href={TOKEN_API_DOCS} rel="noopener noreferrer">Bitcoin Unlimited token API</a>
+            {token.source === "token-api" ? "." : " did not answer."}
+          </p>
+        </>
+      ) : null}
     </>
   );
 }
 
+function useApi<T>(load: () => Promise<T>, key: string): T | null {
+  const [data, setData] = useState<T | null>(null);
+  useEffect(() => {
+    let live = true;
+    setData(null);
+    load()
+      .then((d) => live && setData(d))
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+  return data;
+}
+
+function ApiFacts({ token }: { token: TokenModel }) {
+  const stats = useApi<ApiTokenStats>(() => apiTokenStats(token.group), token.group);
+  if (!stats || (stats.supply === "0" && !stats.holders && !stats.txs)) return null;
+  return (
+    <dl className="facts">
+      {stats.supply && stats.supply !== "0" ? (
+        <div>
+          <dt>Circulating supply</dt>
+          <dd>
+            {formatTokenUnits(stats.supply, token.decimals)} {token.ticker}
+          </dd>
+        </div>
+      ) : null}
+      {stats.holders ? (
+        <div>
+          <dt>Holders</dt>
+          <dd>{formatNumber(stats.holders)}</dd>
+        </div>
+      ) : null}
+      {stats.txs != null ? (
+        <div>
+          <dt>Transactions</dt>
+          <dd>{formatNumber(stats.txs)}</dd>
+        </div>
+      ) : null}
+    </dl>
+  );
+}
+
+function Holders({ token }: { token: TokenModel }) {
+  const rows = useApi(() => apiRichList(token.group, 10), token.group);
+  if (!rows?.length) return null;
+  return (
+    <section className="subgroups">
+      <h2>Top holders</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Address</th>
+            <th className="r">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.address}>
+              <td>
+                <Link href={addressHref(token.chain, row.address)}>
+                  <code>{shortId(row.address, 18, 6)}</code>
+                </Link>
+              </td>
+              <td className="r">{formatTokenUnits(row.amount, token.decimals)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
+  );
+}
+
+function TokenTxs({ token }: { token: TokenModel }) {
+  const [page, setPage] = useState(1);
+  const [rows, setRows] = useState<ApiTokenTx[]>([]);
+  const [total, setTotal] = useState(0);
+  useEffect(() => {
+    let live = true;
+    apiTokenTxs(token.group, page)
+      .then((r) => {
+        if (!live) return;
+        setRows((old) => (page === 1 ? r.rows : [...old, ...r.rows]));
+        setTotal(r.total);
+      })
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [token.group, page]);
+  if (!rows.length) return null;
+  return (
+    <section className="subgroups">
+      <h2>Token transactions</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Transaction</th>
+            <th>Operation</th>
+            <th>Block</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.txid}>
+              <td>
+                <Link href={txHref(token.chain, row.txid)}>{shortId(row.txid, 10, 6)}</Link>
+              </td>
+              <td>{row.operation || "–"}</td>
+              <td>{row.height != null ? <Link href={blockHref(token.chain, row.height)}>{formatNumber(row.height)}</Link> : "Mempool"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {rows.length < total ? (
+        <button type="button" onClick={() => setPage((p) => p + 1)}>
+          More transactions ({formatNumber(total - rows.length)} left)
+        </button>
+      ) : null}
+    </section>
+  );
+}
+
+function Authorities({ token }: { token: TokenModel }) {
+  const rows = useApi<ApiAuthority[]>(() => apiAuthorities(token.group), token.group);
+  if (!rows?.length) return null;
+  return (
+    <section className="subgroups">
+      <h2>Live authorities</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Authority</th>
+            <th>Held by</th>
+            <th>Output of</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, i) => (
+            <tr key={`${row.txid}-${i}`}>
+              <td>{authorityText(row.flags)}</td>
+              <td>{row.address ? <Link href={addressHref(token.chain, row.address)}>{shortId(row.address, 14, 6)}</Link> : "–"}</td>
+              <td>
+                <Link href={txHref(token.chain, row.txid)}>{shortId(row.txid, 10, 6)}</Link>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
+  );
+}
+
+// Token API pages (numbers) first; Rostrum token.nft.list (opaque cursor) if the API fails.
 function Subgroups({ chainId, group }: { chainId: ChainId; group: string }) {
   const [rows, setRows] = useState<SubgroupRow[]>([]);
   const [cursor, setCursor] = useState<unknown>(null);
@@ -190,7 +368,12 @@ function Subgroups({ chainId, group }: { chainId: ChainId; group: string }) {
   const more = async (from: unknown, reset = false) => {
     setBusy(true);
     try {
-      const page = await loadSubgroups(await getSession(chainId), group, from);
+      const at = from as { api?: number; rostrum?: unknown } | null;
+      const api = at?.rostrum === undefined ? await apiSubgroups(group, at?.api ?? 1).catch(() => null) : null;
+      const n = at?.api ?? 1;
+      const page = api
+        ? { rows: api.rows, cursor: n * 25 < api.total ? { api: n + 1 } : null }
+        : await loadSubgroups(await getSession(chainId), group, at?.rostrum ?? null).then((p) => ({ rows: p.rows, cursor: p.cursor == null ? null : { rostrum: p.cursor } }));
       setRows((old) => (reset ? page.rows : [...old, ...page.rows]));
       setCursor(page.cursor);
     } catch {
@@ -273,7 +456,7 @@ function TokenDocument({ url, doc }: { url: string; doc: TokenDoc | null | "fail
       <h2>Token document</h2>
       <p className="muted">
         Source: {source ? <a href={source} rel="noopener noreferrer nofollow">{source}</a> : <code>{url}</code>}
-        {doc && doc !== "failed" ? (doc.via === "proxy" ? " (fetched through the explorer proxy, not stored)" : " (fetched by your browser)") : null}
+        {doc && doc !== "failed" ? (doc.via === "proxy" ? " (fetched through the explorer proxy, not stored)" : doc.via === "token-api" ? " (copy cached by the token API)" : " (fetched by your browser)") : null}
       </p>
       {doc === null ? <p>Loading the document…</p> : null}
       {doc === "failed" ? <p>The document could not be fetched.</p> : null}

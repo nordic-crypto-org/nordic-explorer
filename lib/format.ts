@@ -212,3 +212,12 @@ export function formatChange(change: number | null) {
   const sign = change > 0 ? "+" : "";
   return `${sign}${change.toFixed(1)}%`;
 }
+
+/** A raw integer token amount shifted by the token's decimals, e.g. ("1250000000", 4) → "125,000". */
+export function formatTokenUnits(amount: string, decimals: number | null | undefined) {
+  if (!decimals || !/^\d+$/.test(amount)) return formatRawAmount(amount);
+  const padded = amount.padStart(decimals + 1, "0");
+  const frac = padded.slice(-decimals).replace(/0+$/, "");
+  const whole = formatRawAmount(padded.slice(0, -decimals));
+  return frac ? `${whole}.${frac}` : whole;
+}

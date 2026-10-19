@@ -2,14 +2,14 @@
 
 // Fetches a token's own metadata document from its document_url for display. Nothing is stored.
 // The browser fetches directly; if that fails (usually CORS) it retries through the explorer's
-// pass-through proxy (deploy/doc-proxy.mjs, served at /doc-proxy).
+// pass-through proxy (deploy/doc-proxy.mjs, served at /doc-proxy), then to the token API's cached copy.
 
 const MAX_BYTES = 256 * 1024;
 export const DOC_PROXY = "/doc-proxy?url=";
 
 export type TokenDoc = {
   url: string;
-  via: "direct" | "proxy";
+  via: "direct" | "proxy" | "token-api";
   json: unknown;
   meta: Record<string, unknown> | null;
   hash: "match" | "mismatch" | "unknown";
@@ -48,16 +48,20 @@ async function checkHash(text: string, expected: string | null): Promise<TokenDo
   return hex === want || rev === want ? "match" : "mismatch";
 }
 
-export async function fetchTokenDoc(documentUrl: string | null, documentHash: string | null): Promise<TokenDoc | null> {
+export async function fetchTokenDoc(documentUrl: string | null, documentHash: string | null, cached?: string | null): Promise<TokenDoc | null> {
   const url = safeHttpUrl(documentUrl);
   if (!url) return null;
   let text: string;
   let via: TokenDoc["via"] = "direct";
   try {
     text = await getText(url);
-  } catch {
+  } catch (error) {
     via = "proxy";
-    text = await getText(DOC_PROXY + encodeURIComponent(url));
+    text = await getText(DOC_PROXY + encodeURIComponent(url)).catch(() => {
+      if (!cached) throw error;
+      via = "token-api";
+      return cached;
+    });
   }
   let json: unknown = null;
   try {

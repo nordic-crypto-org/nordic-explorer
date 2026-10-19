@@ -736,3 +736,4 @@ footer.foot h2 {
   .toptokens table.ledger td::before { content: none; }
   .toptokens table.ledger td:not(.r) { text-align: start; }
 }
+.tokicon { display: inline-block; vertical-align: -3px; border-radius: 50%; }

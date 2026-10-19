@@ -58,6 +58,8 @@ npm run build
 
 The Nexa tokens page reads `/data/nexa-tokens.json`, written hourly on the server by `deploy/token-index.mjs` (`token-stats.service` + `token-stats.timer`). It walks blocks from the local nexad over RPC (`getblock` verbosity 2 exposes each output's token group), counts the transactions touching each group, tracks live token UTXOs for holder counts, and reads names and tickers from Rostrum's `token.genesis.info`. State is kept in `/var/lib/explorer-token-index/state.json`; the first run indexes the whole chain (about an hour), later runs only the new blocks. The service runs as `electrum` to read nexad's RPC cookie, so `/var/www/explorer-data` must be writable by it. nginx serves it from `/var/www/explorer-data/` (see `deploy/nginx-explorer.conf`).
 
+Nexa token pages, and token names, tickers, decimals and icons on transaction and address pages, come from the [Bitcoin Unlimited token API](https://tokenapi.bitcoinunlimited.info/swagger-ui/index.html), called from the browser (CORS `*`). Metadata is cached for a day in `localStorage`, live figures for five minutes in memory. If the API fails, token pages fall back to Rostrum's `token.genesis.info` and `token.nft.list`, and other pages show raw group ids.
+
 ## Deploy
 
 `.github/workflows/deploy-explorer.yml` runs on every push to `main` (and by hand): `npm ci`, `npm test`, `npm run build`, then rsync of `out/` to `/var/www/explorer` on electrum-1. It needs the Actions secret `EXPLORER_SSH_KEY`, a key restricted server-side to rrsync into `/var/www/explorer`. nginx config and the token-stats timer in `deploy/` are installed by hand.

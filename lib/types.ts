@@ -122,6 +122,10 @@ export type TokenModel = {
   documentHash: string | null;
   icon: string | null;
   group: string;
+  parent: string | null;
+  /** Token document text as cached by the token API. */
+  doc?: string | null;
+  source: "token-api" | "rostrum";
 };
 
 export type SubgroupRow = { group: string; txid: string | null; height: number | null };

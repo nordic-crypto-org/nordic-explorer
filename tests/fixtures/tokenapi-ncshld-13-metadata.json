@@ -1,0 +1,20 @@
+{
+ "tokenInfo": {
+  "id": 1589137,
+  "token": "nexa:tp5mk7zv78q86jx8xlxsstmt69z6khtawrklcdr27udw722h2sqqqrgqqqqqqqqqqqs6wg6fxv",
+  "tokenIdHex": "69bb784cf1c07d48c737cd082f6bd145ab5d7d70edfc346af71aef29575400000d00000000000000",
+  "name": null,
+  "ticker": null,
+  "documentUrl": null,
+  "documentHash": null,
+  "decimals": null,
+  "parentGroup": "nexa:tp5mk7zv78q86jx8xlxsstmt69z6khtawrklcdr27udw722h2sqqqshrajlfj",
+  "genesisTxId": "8ff9cf8f59058fd03c6c59ec64671e1b3b4d834d3b70bd2e011f75e68f1fbed0",
+  "genesisTxIdem": "727f5b270373d56bb1c7242c0ec9304af4b7f7b4fc69d1b0ed950cd1f05b1c66",
+  "genesisAddress": "nexa:nqtsq5g57th4stk0z303yl0zzwp3l03t68pltaa7xc2v8zqg",
+  "blockHash": "cd033d3e46fa730afe2d85a39231ab8ffaf56953687fb4f93d987071a9c34cde",
+  "blockHeight": 1171985
+ },
+ "iconUrl": "",
+ "jsonDoc": ""
+}

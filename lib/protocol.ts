@@ -392,6 +392,8 @@ export function mapTokenInfo(chain: ChainId, id: string, raw: unknown): TokenMod
     documentHash: typeof row.document_hash === "string" ? row.document_hash : null,
     icon: null,
     group: typeof row.group === "string" ? row.group : id,
+    parent: null,
+    source: "rostrum",
   };
 }
 

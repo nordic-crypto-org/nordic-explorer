@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { chains } from "@/lib/chains";
-import { loadAddress, loadBlock, loadFeeTable, loadTransaction, loadToken } from "@/lib/load";
+import { loadAddress, loadBlock, loadFeeTable, loadTransaction, loadTokenAny } from "@/lib/load";
 import { loadBtcAddress, loadBtcBlock, loadBtcFees, loadBtcTx, MEMPOOL_LABEL } from "@/lib/mempool-space";
 import { formatBytes, formatNumber } from "@/lib/format";
 import { addressHref, txHref } from "@/lib/routes";
@@ -13,7 +13,7 @@ import { FeeRate } from "./money";
 import { ServerLine } from "./server-line";
 import { LoadingState, MissingItem, Unreachable } from "./states";
 import { TokenLookup, TokenView } from "./tokens";
-import { useChainLoad, useSourceLoad } from "./use-chain";
+import { useLoad, useSourceLoad } from "./use-chain";
 
 function LookupForm({ chainId, kind, name, placeholder }: { chainId: ChainId; kind: "tx" | "address"; name: string; placeholder: string }) {
   const router = useRouter();
@@ -200,7 +200,7 @@ export function TokenScreen({ chainId, index = false }: { chainId: ChainId; inde
 }
 
 function TokenLoader({ chainId, id }: { chainId: ChainId; id: string }) {
-  const { state, retry } = useChainLoad(chainId, id, (session) => loadToken(session, id));
+  const { state, retry } = useLoad(chainId, id, () => loadTokenAny(chainId, id));
   if (state.status === "loading") return <LoadingState chainId={chainId} />;
   if (state.status === "unreachable") return <Unreachable chainId={chainId} servers={state.servers} onRetry={retry} />;
   if (state.status === "missing") return <MissingItem chainId={chainId} message={state.message} />;

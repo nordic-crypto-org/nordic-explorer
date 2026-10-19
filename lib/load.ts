@@ -1,5 +1,5 @@
 import { chains } from "./chains";
-import { MissingError, type Session } from "./electrum";
+import { getSession, MissingError, type Session } from "./electrum";
 import { parseHeaderBundle, parseHeaderHex } from "./headers";
 import {
   blockFromHeader,
@@ -17,6 +17,7 @@ import {
   sideFrom,
 } from "./protocol";
 import { knownTokenIcon } from "./known-tokens";
+import { apiToken } from "./token-api";
 import type { SubgroupRow, AddressModel, BlockModel, ChainId, FeeRow, OverviewModel, TokenModel, TxModel, TxSide } from "./types";
 
 const HISTORY_LIMIT = 40;
@@ -220,11 +221,21 @@ export async function loadToken(session: Session, id: string): Promise<TokenMode
   try {
     const raw = await session.call("token.genesis.info", [text]);
     const token = mapTokenInfo(session.chain, text, raw);
-    const icon = knownTokenIcon(session.chain, text) ?? knownTokenIcon(session.chain, token.id);
+    const icon = knownTokenIcon(session.chain, text) ?? knownTokenIcon(session.chain, token.group);
     return { ...token, icon };
   } catch {
     throw new MissingError("The server has no genesis record for that token.");
   }
+}
+
+/** Nexa tokens come from the Bitcoin Unlimited token API, falling back to Rostrum's genesis record. */
+export async function loadTokenAny(chain: ChainId, id: string): Promise<TokenModel> {
+  const text = id.trim();
+  if (chain === "nexa" && text.length >= 4) {
+    const token = await apiToken(text).catch(() => null);
+    if (token) return { chain, ...token, icon: knownTokenIcon(chain, text) ?? knownTokenIcon(chain, token.group) ?? token.icon, source: "token-api" };
+  }
+  return loadToken(await getSession(chain), text);
 }
 
 // One page of NFT subgroups (Rostrum token.nft.list), each with its genesis (mint) tx.

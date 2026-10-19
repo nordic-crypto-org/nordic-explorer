@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { chains } from "@/lib/chains";
-import { authorityText, formatBytes, formatCoin, formatNumber, formatRawAmount, formatWhen, shortId } from "@/lib/format";
+import { authorityText, formatBytes, formatCoin, formatNumber, formatTokenUnits, formatWhen, shortId } from "@/lib/format";
 import { txTokens } from "@/lib/protocol";
 import { addressHref, blockHref, tokenHref, txHref } from "@/lib/routes";
-import type { AddressModel, BlockModel, ChainId, TxModel, TxSide } from "@/lib/types";
+import type { AddressModel, BlockModel, ChainId, TokenMove, TxModel, TxSide } from "@/lib/types";
 import { Age } from "./age";
 import { CopyButton } from "./copy-button";
 import { CoinWithFiat, FeeRate, FiatOnly } from "./money";
+import { TokenIcon, tokenLabel, useTokenLabel } from "./token-label";
 
 function Crumb({ chainId, current }: { chainId: ChainId; current: string }) {
   return (
@@ -24,10 +25,24 @@ function Party({ chainId, side }: { chainId: ChainId; side: TxSide }) {
 }
 
 function TokenBit({ chainId, side }: { chainId: ChainId; side: TxSide }) {
-  if (!side.token) return null;
+  return side.token ? <TokenLine chainId={chainId} token={side.token} /> : null;
+}
+
+function TokenLine({ chainId, token }: { chainId: ChainId; token: TokenMove }) {
+  const meta = useTokenLabel(chainId, token.id);
   return (
-    <Link className="tokenline" href={tokenHref(chainId, side.token.id)}>
-      {side.token.authority ? authorityText(side.token.authority) : formatRawAmount(side.token.amount)} {shortId(side.token.id, 8, 4)}
+    <Link className="tokenline" href={tokenHref(chainId, token.id)}>
+      <TokenIcon meta={meta} /> {token.authority ? authorityText(token.authority) : formatTokenUnits(token.amount, meta?.decimals)} {tokenLabel(meta, token.id)}
+    </Link>
+  );
+}
+
+function TokenChip({ chainId, id, amount }: { chainId: ChainId; id: string; amount: string }) {
+  const meta = useTokenLabel(chainId, id);
+  return (
+    <Link className="chip" href={tokenHref(chainId, id)}>
+      <TokenIcon meta={meta} /> {tokenLabel(meta, id)}
+      <b>{formatTokenUnits(amount, meta?.decimals)}</b>
     </Link>
   );
 }
@@ -164,6 +179,7 @@ function SideList({ chainId, title, sides, coinbase }: { chainId: ChainId; title
 export function TxView({ tx }: { tx: TxModel }) {
   const chain = chains[tx.chain];
   const { token, authority } = txTokens(tx);
+  const meta = useTokenLabel(tx.chain, (token ?? authority)?.id);
   const outputTotal = tx.outputs.reduce((sum, side) => sum + (side.amount ?? 0), 0);
   return (
     <>
@@ -172,7 +188,7 @@ export function TxView({ tx }: { tx: TxModel }) {
         {tx.coinbase ? "Coinbase" : "Transaction"} · {chain.name} ·{" "}
         {tx.confirmations > 0 ? <span className="up">Confirmed</span> : <span className="down">Waiting</span>}
       </p>
-      <h1>{token ? formatRawAmount(token.amount) : tx.outputs.some((side) => side.amount != null) ? formatCoin(outputTotal, chain) : shortId(tx.txid, 10, 6)}</h1>
+      <h1>{token ? <>{formatTokenUnits(token.amount, meta?.decimals)}{meta?.ticker ? <span> {meta.ticker}</span> : null}</> : tx.outputs.some((side) => side.amount != null) ? formatCoin(outputTotal, chain) : shortId(tx.txid, 10, 6)}</h1>
       <p className="lead">
         {tx.confirmations > 0 && tx.blockHeight != null ? (
           <>
@@ -205,19 +221,23 @@ export function TxView({ tx }: { tx: TxModel }) {
       {token ? (
         <div className="callout">
           <strong>
-            <Link href={tokenHref(tx.chain, token.id)}>{token.kind}</Link>
+            <Link href={tokenHref(tx.chain, token.id)}>
+              <TokenIcon meta={meta} /> {meta?.name ?? token.kind}
+            </Link>
           </strong>
           <p>
-            {formatRawAmount(token.amount)} of token {shortId(token.id, 12, 6)} moves in this transaction.
+            {formatTokenUnits(token.amount, meta?.decimals)} of {meta?.ticker ?? `token ${shortId(token.id, 12, 6)}`} moves in this transaction.
           </p>
         </div>
       ) : authority ? (
         <div className="callout">
           <strong>
-            <Link href={tokenHref(tx.chain, authority.id)}>{authority.kind}</Link>
+            <Link href={tokenHref(tx.chain, authority.id)}>
+              <TokenIcon meta={meta} /> {meta?.name ? `${meta.name} authority` : authority.kind}
+            </Link>
           </strong>
           <p>
-            {authorityText(authority.authority ?? [])} for token {shortId(authority.id, 12, 6)} moves in this transaction.
+            {authorityText(authority.authority ?? [])} for {meta?.ticker ?? `token ${shortId(authority.id, 12, 6)}`} moves in this transaction.
           </p>
         </div>
       ) : null}
@@ -287,10 +307,7 @@ export function AddressView({ address }: { address: AddressModel }) {
       {address.tokens.length > 0 ? (
         <div className="chips">
           {address.tokens.map((holding) => (
-            <Link className="chip" key={holding.id} href={tokenHref(address.chain, holding.id)}>
-              {shortId(holding.id, 8, 4)}
-              <b>{formatRawAmount(holding.amount)}</b>
-            </Link>
+            <TokenChip key={holding.id} chainId={address.chain} id={holding.id} amount={holding.amount} />
           ))}
         </div>
       ) : chain.tokens ? (

@@ -7,9 +7,10 @@ import { loadSubgroups } from "@/lib/load";
 import { fetchTokenDoc, safeHttpUrl, type TokenDoc } from "@/lib/token-doc";
 import { useRouter } from "next/navigation";
 import { chains } from "@/lib/chains";
-import { formatNumber, shortId } from "@/lib/format";
+import { formatBaseUnits, formatNumber, shortId } from "@/lib/format";
 import { knownTokenIcon } from "@/lib/known-tokens";
 import { blockHref, tokenHref, txHref } from "@/lib/routes";
+import { Age } from "@/components/age";
 import type { ChainId, SubgroupRow, TokenModel } from "@/lib/types";
 
 export function TokenLookup({ chainId }: { chainId: ChainId }) {
@@ -17,30 +18,30 @@ export function TokenLookup({ chainId }: { chainId: ChainId }) {
   const router = useRouter();
   return (
     <>
-      <p className="eyebrow">Tokens · {chain.name}</p>
-      <h1>{chainId === "nexa" ? "Group tokens" : "CashTokens"}</h1>
-      <p className="lead">
-        {chainId === "nexa"
-          ? "Nexa carries tokens in the same transaction as the coin. Paste a group id to ask the server for its genesis record, or pick one from the list below."
-          : "Bitcoin Cash carries tokens as CashTokens. Paste a category id to ask the server for its genesis record. There is no list of every token."}
-      </p>
-      <form
-        className="search"
-        onSubmit={(event) => {
-          event.preventDefault();
-          const data = new FormData(event.currentTarget);
-          const id = String(data.get("id") ?? "").trim();
-          if (!id) return;
-          router.push(tokenHref(chainId, id));
-        }}
-      >
-        <label className="vh" htmlFor="token-id">
-          Token id
-        </label>
-        <input id="token-id" name="id" placeholder="Token id" autoComplete="off" />
-        <button type="submit">Look up</button>
-      </form>
-      {chainId === "nexa" ? <TopTokens chainId={chainId} /> : null}
+        <p className="eyebrow">Tokens · {chain.name}</p>
+        <h1>{chainId === "nexa" ? "Group tokens" : "CashTokens"}</h1>
+        <p className="lead">
+          {chainId === "nexa"
+            ? "Nexa carries tokens in the same transaction as the coin. Paste a group id to ask the server for its genesis record, or pick one from the list below."
+            : "Bitcoin Cash carries tokens as CashTokens. Paste a category id to ask the server for its genesis record. There is no list of every token."}
+        </p>
+        <form
+          className="search"
+          onSubmit={(event) => {
+            event.preventDefault();
+            const data = new FormData(event.currentTarget);
+            const id = String(data.get("id") ?? "").trim();
+            if (!id) return;
+            router.push(tokenHref(chainId, id));
+          }}
+        >
+          <label className="vh" htmlFor="token-id">
+            Token id
+          </label>
+          <input id="token-id" name="id" placeholder="Token id" autoComplete="off" />
+          <button type="submit">Look up</button>
+        </form>
+        {chainId === "nexa" ? <TopTokens chainId={chainId} /> : null}
     </>
   );
 }
@@ -50,6 +51,21 @@ type TokenStats = {
   fetchedAt: string;
   lastBlock: number;
   tokens: { id: string; name: string | null; ticker: string | null; txs: number; holders: number }[];
+  /** Newest first. Missing in files written before the melt index. */
+  melts?: TokenMelt[];
+};
+
+type TokenMelt = {
+  txid: string;
+  height: number;
+  time: number | null;
+  group: string;
+  /** Base units destroyed, as a decimal string. */
+  amount: string;
+  subgroup: boolean;
+  name: string | null;
+  ticker: string | null;
+  decimals: number | null;
 };
 
 function TopTokens({ chainId }: { chainId: ChainId }) {
@@ -65,6 +81,8 @@ function TopTokens({ chainId }: { chainId: ChainId }) {
   if (data === "failed") return <p className="muted">The token list is not available right now.</p>;
   const rows = all ? data.tokens : data.tokens.slice(0, 50);
   return (
+    <>
+    {data.melts ? <LatestMelts chainId={chainId} melts={data.melts} lastBlock={data.lastBlock} /> : null}
     <section className="toptokens">
       <h2>Tokens by transfers</h2>
       <p className="muted">
@@ -105,6 +123,74 @@ function TopTokens({ chainId }: { chainId: ChainId }) {
       {!all && data.tokens.length > rows.length ? (
         <button type="button" onClick={() => setAll(true)}>
           Show all {formatNumber(data.tokens.length)}
+        </button>
+      ) : null}
+    </section>
+    </>
+  );
+}
+
+function LatestMelts({ chainId, melts, lastBlock }: { chainId: ChainId; melts: TokenMelt[]; lastBlock: number }) {
+  const [all, setAll] = useState(false);
+  const rows = all ? melts : melts.slice(0, 15);
+  return (
+    <section className="toptokens melts" id="melts">
+      <h2>Latest melts</h2>
+      <p className="muted">
+        A melt destroys token supply: the transaction spends a melt authority and puts fewer tokens out than it takes in.
+        {melts.length ? " Newest first, " : " None found "}up to block {formatNumber(lastBlock)}.
+      </p>
+      {melts.length ? (
+        <table className="ledger">
+          <thead>
+            <tr>
+              <th>Token</th>
+              <th className="r">Melted</th>
+              <th>Transaction</th>
+              <th className="r">Block</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((m) => {
+              const icon = knownTokenIcon(chainId, m.group);
+              return (
+                <tr key={`${m.txid}:${m.group}`}>
+                  <td>
+                    <Link href={tokenHref(chainId, m.group)} className="toptoken">
+                      {icon ? <img src={icon} alt="" width={24} height={24} /> : <span className="noicon" aria-hidden="true" />}
+                      <span>
+                        {m.name ?? (m.subgroup ? "Subgroup " : "") + shortId(m.group, 12, 6)}
+                        {m.ticker ? <span className="muted"> {m.ticker}</span> : null}
+                      </span>
+                    </Link>
+                  </td>
+                  <td className="r">
+                    {m.subgroup && m.amount === "1" ? "1 NFT" : formatBaseUnits(m.amount, m.decimals)}
+                    {m.decimals == null && !m.subgroup ? <span className="muted"> units</span> : null}
+                  </td>
+                  <td>
+                    <Link href={txHref(chainId, m.txid)}>
+                      <code>{shortId(m.txid, 10, 6)}</code>
+                    </Link>
+                  </td>
+                  <td className="r">
+                    <Link href={blockHref(chainId, m.height)}>{formatNumber(m.height)}</Link>
+                    {m.time ? (
+                      <>
+                        <br />
+                        <span className="muted"><Age iso={new Date(m.time * 1000).toISOString()} /></span>
+                      </>
+                    ) : null}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      ) : null}
+      {!all && melts.length > rows.length ? (
+        <button type="button" onClick={() => setAll(true)}>
+          Show all {formatNumber(melts.length)}
         </button>
       ) : null}
     </section>

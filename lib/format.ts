@@ -212,3 +212,13 @@ export function formatChange(change: number | null) {
   const sign = change > 0 ? "+" : "";
   return `${sign}${change.toFixed(1)}%`;
 }
+
+/** A token amount in base units (decimal string, any size) shown with its decimals, en-GB digits. */
+export function formatBaseUnits(amount: string, decimals: number | null): string {
+  if (!/^\d+$/.test(amount)) return amount;
+  const places = decimals != null && Number.isInteger(decimals) && decimals > 0 ? Math.min(decimals, 18) : 0;
+  const digits = amount.replace(/^0+(?=\d)/, "").padStart(places + 1, "0");
+  const whole = digits.slice(0, digits.length - places).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const frac = digits.slice(digits.length - places).replace(/0+$/, "");
+  return frac ? `${whole}.${frac}` : whole;
+}

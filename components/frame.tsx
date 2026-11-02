@@ -30,7 +30,7 @@ function Shell({ chain, children }: { chain?: ChainId; children: ReactNode }) {
   const segment = path.split("/")[1] ?? "";
   const resolved: ChainId = chain ?? (isChainId(segment) ? segment : defaultChain);
   const { fiat, setFiat } = usePrefs();
-  const section = path.includes("/mempool") ? "mempool" : path.includes("/token") ? "tokens" : "overview";
+  const section = path.includes("/capd") ? "capd" : path.includes("/mempool") ? "mempool" : path.includes("/token") ? "tokens" : "overview";
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -131,6 +131,11 @@ function Shell({ chain, children }: { chain?: ChainId; children: ReactNode }) {
                 Tokens
               </Link>
             ) : null}
+            {resolved === "nexa" ? (
+              <Link href="/nexa/capd" aria-current={section === "capd" ? "page" : undefined}>
+                CAPD
+              </Link>
+            ) : null}
           </nav>
         </div>
       </header>
@@ -158,6 +163,11 @@ function Shell({ chain, children }: { chain?: ChainId; children: ReactNode }) {
               ))}
               <li><Link href={`/${resolved}/mempool`}>Mempool</Link></li>
               {chains[resolved].tokens ? <li><Link href={`/${resolved}/tokens`}>Tokens</Link></li> : null}
+              {resolved === "nexa" ? (
+                <li>
+                  <Link href="/nexa/capd">CAPD</Link>
+                </li>
+              ) : null}
             </ul>
           </div>
           <div>

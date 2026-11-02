@@ -13,6 +13,7 @@ import { usePrefs } from "./prefs";
 import { ServerLine } from "./server-line";
 import { LoadingState, MissingItem, Unreachable } from "./states";
 import { useSourceLoad } from "./use-chain";
+import { ChainName } from "./coin";
 
 function PriceStat({ chainId }: { chainId: ChainId }) {
   const { fiat } = usePrefs();
@@ -64,10 +65,9 @@ function OverviewView({ chainId, model }: { chainId: ChainId; model: OverviewMod
   return (
     <>
       <p className="eyebrow">
-        <span className={`pip ${chainId}`} aria-hidden="true" />
-        {chain.name} · {chain.target} blocks
+        <ChainName chain={chain.id} /> · {chain.target} blocks
       </p>
-      <h1>{chain.name}</h1>
+      <h1><ChainName chain={chain.id} /></h1>
       <p className="lead">{chain.about}</p>
       <ServerLine label={model.serverLabel} version={model.serverVersion} fallback={model.fallback} apiHref={chain.apiHref} apiLabel={chain.apiLabel} />
       {tip ? (

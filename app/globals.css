@@ -736,3 +736,7 @@ footer.foot h2 {
   .toptokens table.ledger td::before { content: none; }
   .toptokens table.ledger td:not(.r) { text-align: start; }
 }
+
+/* Coin logos next to chain names in headings, crumbs and eyebrows */
+.chain-name { display: inline-flex; align-items: center; gap: 0.3em; white-space: nowrap; }
+.coin-logo { width: 1em; height: 1em; flex: none; display: inline-block; }

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { chains, defaultChain } from "@/lib/chains";
 import type { ChainId, SearchHit } from "@/lib/types";
 import { Frame } from "./frame";
+import { ChainName } from "./coin";
 
 export function Results({ q, hits }: { q: string; hits: SearchHit[] }) {
   return (
@@ -15,8 +16,7 @@ export function Results({ q, hits }: { q: string; hits: SearchHit[] }) {
         {hits.map((hit) => (
           <Link className="result" key={hit.href} href={hit.href}>
             <span className="kind">
-              <span className={`pip ${hit.chain}`} aria-hidden="true" />
-              {hit.kind} · {chains[hit.chain].name}
+              {hit.kind} · <ChainName chain={hit.chain} />
             </span>
             <span>
               <strong>{hit.title}</strong>
@@ -134,7 +134,7 @@ export function EmptyMempool({ chainId }: { chainId: ChainId }) {
   const chain = chains[chainId];
   return (
     <>
-      <p className="eyebrow">Mempool · {chain.name}</p>
+      <p className="eyebrow">Mempool · <ChainName chain={chain.id} /></p>
       <h1>Nothing is waiting</h1>
       <p className="lead">The next block will be only the miner’s reward, unless a transaction arrives before it is found.</p>
       <p>

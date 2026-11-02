@@ -7,11 +7,12 @@ import type { AddressModel, BlockModel, ChainId, TxModel, TxSide } from "@/lib/t
 import { Age } from "./age";
 import { CopyButton } from "./copy-button";
 import { CoinWithFiat, FeeRate, FiatOnly } from "./money";
+import { ChainName } from "./coin";
 
 function Crumb({ chainId, current }: { chainId: ChainId; current: string }) {
   return (
     <nav className="crumb" aria-label="Breadcrumb">
-      <Link href={`/${chainId}`}>{chains[chainId].name}</Link>
+      <Link href={`/${chainId}`}><ChainName chain={chainId} /></Link>
       <span aria-hidden="true"> · </span>
       <span>{current}</span>
     </nav>
@@ -41,7 +42,7 @@ export function BlockView({ block }: { block: BlockModel }) {
   return (
     <>
       <Crumb chainId={block.chain} current={`Block ${formatNumber(block.height)}`} />
-      <p className="eyebrow">Block · {chain.name}</p>
+      <p className="eyebrow">Block · <ChainName chain={chain.id} /></p>
       <h1 className="num">#{formatNumber(block.height)}</h1>
       <p className="lead">
         <Age iso={block.time} />. {block.time ? formatWhen(block.time) : null}.
@@ -169,7 +170,7 @@ export function TxView({ tx }: { tx: TxModel }) {
     <>
       <Crumb chainId={tx.chain} current={tx.coinbase ? "Coinbase" : "Transaction"} />
       <p className="eyebrow">
-        {tx.coinbase ? "Coinbase" : "Transaction"} · {chain.name} ·{" "}
+        {tx.coinbase ? "Coinbase" : "Transaction"} · <ChainName chain={chain.id} /> ·{" "}
         {tx.confirmations > 0 ? <span className="up">Confirmed</span> : <span className="down">Waiting</span>}
       </p>
       <h1>{token ? formatRawAmount(token.amount) : tx.outputs.some((side) => side.amount != null) ? formatCoin(outputTotal, chain) : shortId(tx.txid, 10, 6)}</h1>
@@ -270,7 +271,7 @@ export function AddressView({ address }: { address: AddressModel }) {
   return (
     <>
       <Crumb chainId={address.chain} current="Address" />
-      <p className="eyebrow">Address · {chain.name}</p>
+      <p className="eyebrow">Address · <ChainName chain={chain.id} /></p>
       <h1 className="balance">
         <span className="vh">Balance </span>
         {formatNumber(address.balance, Math.min(chain.decimals, address.balance !== 0 && Math.abs(address.balance) < 1 ? chain.decimals : 2))}

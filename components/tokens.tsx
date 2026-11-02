@@ -11,13 +11,14 @@ import { formatNumber, shortId } from "@/lib/format";
 import { knownTokenIcon } from "@/lib/known-tokens";
 import { blockHref, tokenHref, txHref } from "@/lib/routes";
 import type { ChainId, SubgroupRow, TokenModel } from "@/lib/types";
+import { ChainName } from "./coin";
 
 export function TokenLookup({ chainId }: { chainId: ChainId }) {
   const chain = chains[chainId];
   const router = useRouter();
   return (
     <>
-      <p className="eyebrow">Tokens · {chain.name}</p>
+      <p className="eyebrow">Tokens · <ChainName chain={chain.id} /></p>
       <h1>{chainId === "nexa" ? "Group tokens" : "CashTokens"}</h1>
       <p className="lead">
         {chainId === "nexa"
@@ -128,13 +129,13 @@ export function TokenView({ token }: { token: TokenModel }) {
   return (
     <>
       <nav className="crumb" aria-label="Breadcrumb">
-        <Link href={`/${token.chain}`}>{chain.name}</Link>
+        <Link href={`/${token.chain}`}><ChainName chain={chain.id} /></Link>
         <span aria-hidden="true"> · </span>
         <Link href={`/${token.chain}/tokens`}>Tokens</Link>
         <span aria-hidden="true"> · </span>
         <span>{token.ticker ?? "Token"}</span>
       </nav>
-      <p className="eyebrow">Token · {chain.name}</p>
+      <p className="eyebrow">Token · <ChainName chain={chain.id} /></p>
       <h1 className="token-title">
         {icon ? <img src={icon} alt="" width={48} height={48} /> : null}
         {token.name && token.ticker ? `${token.name} (${token.ticker})` : (token.ticker ?? token.name ?? shortId(token.id, 12, 6))}
